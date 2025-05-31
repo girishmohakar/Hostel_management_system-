@@ -1,9 +1,23 @@
- #include <stdio.h>
+#include <stdio.h>
 #include <string.h>
 
 struct User {
     char name[50];
-    char phone[15]; 
+    char phone[15];
+};
+
+struct Menu {
+    char breakfast[100];
+    char lunch[100];
+    char dinner[100];
+};
+
+struct Feedback {
+    int day;
+    int breakfastRating;
+    int lunchRating;
+    int dinnerRating;
+    char suggestion[200];
 };
 
 struct User owners[] = {
@@ -16,34 +30,18 @@ struct User students[] = {
     {"Student2", "6666666666"}
 };
 
+struct Menu weeklyMenu[7];
+struct Feedback feedbackList[100];
+int feedbackCount = 0;
 
-struct Menu {
-    char breakfast[100];
-    char lunch[100];
-    char dinner[100];
-};
-struct Menu weeklyMenu[7]; 
-
-
-struct Feedback {
-    int day;
-    int breakfastRating;
-    int lunchRating;
-    int dinnerRating;
-    char suggestion[200];
-};
-
-struct Feedback feedbackList[100]; 
-int feedbackCount = 0; 
-
-
+int isOwner(char phone[]);
+int isStudent(char phone[]);
 void ownerMenu();
 void studentMenu();
 void updateMenu();
 void viewMenu();
 void submitFeedback();
 void generateReport();
-
 
 int isOwner(char phone[]) {
     for (int i = 0; i < 2; i++) {
@@ -69,16 +67,16 @@ void updateMenu() {
         printf("Invalid day.\n");
         return;
     }
-    day--; 
+    day--;
 
     printf("Enter Breakfast for Day %d: ", day + 1);
-    scanf(" %[^\n]", weeklyMenu[day].breakfast); 
+    scanf(" %[^\n]", weeklyMenu[day].breakfast);
     printf("Enter Lunch for Day %d: ", day + 1);
     scanf(" %[^\n]", weeklyMenu[day].lunch);
     printf("Enter Dinner for Day %d: ", day + 1);
     scanf(" %[^\n]", weeklyMenu[day].dinner);
 
-    printf("Menu updated successfully for Day %d!\n", day + 1);
+    printf("Menu updated for Day %d!\n", day + 1);
 }
 
 void viewMenu() {
@@ -96,7 +94,6 @@ void viewMenu() {
     printf("Lunch    : %s\n", weeklyMenu[day].lunch);
     printf("Dinner   : %s\n", weeklyMenu[day].dinner);
 }
-
 
 void submitFeedback() {
     if (feedbackCount >= 100) {
@@ -121,98 +118,37 @@ void submitFeedback() {
     scanf("%d", &fb.lunchRating);
     printf("Rate Dinner (1-5): ");
     scanf("%d", &fb.dinnerRating);
-
     printf("Any suggestions or complaints? ");
     scanf(" %[^\n]", fb.suggestion);
-
-    feedbackList[feedbackCount++] = fb;
+    
+feedbackList[feedbackCount] = fb;
+feedbackCount++;
 
     printf("Thank you for your feedback!\n");
 }
-
 
 void generateReport() {
     if (feedbackCount == 0) {
         printf("No feedbacks available.\n");
         return;
     }
-    struct {
-        char name[100];
-        int totalRating;
-        int count;
-    } foodRatings[100];
-    int ratingIndex = 0;
+
+    float totalBreakfast = 0, totalLunch = 0, totalDinner = 0;
 
     for (int i = 0; i < feedbackCount; i++) {
-        int d = feedbackList[i].day - 1;
-
-        
-        int found = 0;
-        for (int j = 0; j < ratingIndex; j++) {
-            if (strcmp(foodRatings[j].name, weeklyMenu[d].breakfast) == 0) {
-                foodRatings[j].totalRating += feedbackList[i].breakfastRating;
-                foodRatings[j].count++;
-                found = 1;
-                break;
-            }
-        }
-        if (!found) {
-            strcpy(foodRatings[ratingIndex].name, weeklyMenu[d].breakfast);
-            foodRatings[ratingIndex].totalRating = feedbackList[i].breakfastRating;
-            foodRatings[ratingIndex].count = 1;
-            ratingIndex++;
-        }
-
-        found = 0;
-        for (int j = 0; j < ratingIndex; j++) {
-            if (strcmp(foodRatings[j].name, weeklyMenu[d].lunch) == 0) {
-                foodRatings[j].totalRating += feedbackList[i].lunchRating;
-                foodRatings[j].count++;
-                found = 1;
-                break;
-            }
-        }
-        if (!found) {
-            strcpy(foodRatings[ratingIndex].name, weeklyMenu[d].lunch);
-            foodRatings[ratingIndex].totalRating = feedbackList[i].lunchRating;
-            foodRatings[ratingIndex].count = 1;
-            ratingIndex++;
-        }
-
-        found = 0;
-        for (int j = 0; j < ratingIndex; j++) {
-            if (strcmp(foodRatings[j].name, weeklyMenu[d].dinner) == 0) {
-                foodRatings[j].totalRating += feedbackList[i].dinnerRating;
-                foodRatings[j].count++;
-                found = 1;
-                break;
-            }
-        }
-        if (!found) {
-            strcpy(foodRatings[ratingIndex].name, weeklyMenu[d].dinner);
-            foodRatings[ratingIndex].totalRating = feedbackList[i].dinnerRating;
-            foodRatings[ratingIndex].count = 1;
-            ratingIndex++;
-        }
+        totalBreakfast += feedbackList[i].breakfastRating;
+        totalLunch += feedbackList[i].lunchRating;
+        totalDinner += feedbackList[i].dinnerRating;
     }
-    float bestAvg = 0, worstAvg = 6;
-    char bestFood[100], worstFood[100];
 
-    for (int i = 0; i < ratingIndex; i++) {
-        float avg = (float)foodRatings[i].totalRating / foodRatings[i].count;
-        if (avg > bestAvg) {
-            bestAvg = avg;
-            strcpy(bestFood, foodRatings[i].name);
-        }
-        if (avg < worstAvg) {
-            worstAvg = avg;
-            strcpy(worstFood, foodRatings[i].name);
-        }
-    }
+    float avgBreakfast = totalBreakfast / feedbackCount;
+    float avgLunch = totalLunch / feedbackCount;
+    float avgDinner = totalDinner / feedbackCount;
 
     printf("\n--- Weekly Food Report ---\n");
-    printf("Most liked item : %s (%.2f stars)\n", bestFood, bestAvg);
-    printf("Least liked item: %s (%.2f stars)\n", worstFood, worstAvg);
+    printf("Average Breakfast Rating: %.2f\n", avgBreakfast);
+    printf("Average Lunch Rating    : %.2f\n", avgLunch);
+    printf("Average Dinner Rating   : %.2f\n", avgDinner);
 
     printf("\n--- Student Suggestions ---\n");
     for (int i = 0; i < feedbackCount; i++) {
@@ -224,44 +160,41 @@ void ownerMenu() {
     int choice;
     do {
         printf("\n--- Owner Menu ---\n");
-        printf("1. Update Food Menu\n");
+        printf("1. Update Menu\n");
         printf("2. View Menu\n");
-        printf("3. Collect Mess Rent (Coming Soon)\n");
-        printf("4. View Student Logs / Weekly Report\n");
-        printf("5. Exit\n");
+        printf("3. View Weekly Report\n");
+        printf("4. Exit\n");
         printf("Enter choice: ");
         scanf("%d", &choice);
 
         switch (choice) {
             case 1: updateMenu(); break;
             case 2: viewMenu(); break;
-            case 4: generateReport(); break;
-            case 5: printf("Exiting Owner Menu.\n"); break;
+            case 3: generateReport(); break;
+            case 4: printf("Exiting Owner Menu.\n"); break;
             default: printf("Invalid choice.\n");
         }
-    } while (choice != 5);
+    } while (choice != 4);
 }
 
 void studentMenu() {
     int choice;
     do {
         printf("\n--- Student Menu ---\n");
-        printf("1. View Food Menu\n");
-        printf("2. Submit Feedback / Complaint\n");
-        printf("3. Pay Mess Rent (Coming Soon)\n");
-        printf("4. Exit\n");
+        printf("1. View Menu\n");
+        printf("2. Submit Feedback\n");
+        printf("3. Exit\n");
         printf("Enter choice: ");
         scanf("%d", &choice);
 
         switch (choice) {
             case 1: viewMenu(); break;
             case 2: submitFeedback(); break;
-            case 4: printf("Exiting Student Menu.\n"); break;
+            case 3: printf("Exiting Student Menu.\n"); break;
             default: printf("Invalid choice.\n");
         }
-    } while (choice != 4);
+    } while (choice != 3);
 }
-
 
 int main() {
     char phone[15];
